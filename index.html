@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arena Brackets</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <div id="app">
+    <!-- Header Utama -->
+    <header class="topbar">
+      <div>
+        <p class="kicker">Live Tournament Display</p>
+        <h1 id="content-title">Arena Brackets</h1>
+        <p id="content-subtitle" class="lede">Sistem Pertandingan Realtime</p>
+      </div>
+      <div class="top-actions">
+        <span class="badge">Firebase Sync: Active</span>
+        <button id="btn-login-modal" class="btn primary">Admin Login</button>
+        <button id="btn-logout" class="btn ghost hidden">Logout</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Panel Admin (Muncul Hanya Jika Admin Login) -->
+      <section id="admin-panel" class="admin-panel hidden">
+        <div class="card">
+          <h2>Informasi Turnamen</h2>
+          <label>
+            Judul Turnamen
+            <input type="text" id="input-title" placeholder="Nama Turnamen">
+          </label>
+          <label>
+            Subjudul / Kategori
+            <input type="text" id="input-subtitle" placeholder="Subjudul Turnamen">
+          </label>
+          <label>
+            Deskripsi Singkat
+            <textarea id="input-description" rows="2" placeholder="Deskripsi..."></textarea>
+          </label>
+          <button id="btn-save-content" class="btn primary tiny">Simpan Info</button>
+        </div>
+
+        <div class="card">
+          <h2>Daftar Tim</h2>
+          <label>
+            Nama Tim (Pisahkan dengan baris baru / koma)
+            <textarea id="input-teams" rows="5" placeholder="Tim A&#10;Tim B&#10;Tim C&#10;Tim D"></textarea>
+          </label>
+          <button id="btn-save-teams" class="btn primary tiny">Simpan Tim</button>
+        </div>
+
+        <div class="card">
+          <h2>Generasi Bracket</h2>
+          <label>
+            Format Pertandingan
+            <select id="select-mode">
+              <option value="single">Single Elimination</option>
+              <option value="double">Double Elimination</option>
+            </select>
+          </label>
+          <button id="btn-generate-bracket" class="btn primary">Acak & Buat Bracket</button>
+        </div>
+      </section>
+
+      <!-- Deskripsi Turnamen -->
+      <section class="card section-block" style="margin-top: 24px;">
+        <p id="content-description" class="lede" style="margin: 0;">Follow matchups, results, and standings in real time.</p>
+      </section>
+
+      <!-- Display Bagan Bracket Turnamen -->
+      <section class="card section-block">
+        <h2>Bagan Turnamen</h2>
+        <div id="bracket-container">
+          <p class="lede">Belum ada bagan turnamen yang dibuat.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Dialog Login Admin -->
+  <!-- Modal Login Admin standar -->
+<!-- Modal Login Admin dengan Tag Form -->
+<div id="modal-login" class="modal-backdrop hidden">
+  <div class="card" style="width: min(400px, 90vw); margin: 100px auto;">
+    <h2>Admin Login</h2>
+    
+    <form id="form-login">
+      <label>
+        Username
+        <input type="text" id="login-username" autocomplete="username" placeholder="Masukkan username" required>
+      </label>
+      <label>
+        Password
+        <input type="password" id="login-password" autocomplete="current-password" placeholder="Masukkan password" required>
+      </label>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+        <button type="button" id="btn-close-modal" class="btn ghost tiny">Batal</button>
+        <button type="submit" id="btn-do-login" class="btn primary tiny">Masuk</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+  <!-- Pemanggilan Script Utama -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+:root {
+  --bg: #070b14;
+  --panel: #10182a;
+  --line: #2a3a5c;
+  --text: #e8eefc;
+  --muted: #93a0bf;
+  --accent: #3dffc8;
+  --accent-2: #6d7cff;
+  --danger: #ff6b8a;
+  --win: #3dffc8;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+
+body {
+  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  background: radial-gradient(1200px 600px at 10% -10%, #1a2450 0%, transparent 50%),
+              radial-gradient(900px 500px at 110% 10%, #123d36 0%, transparent 45%),
+              var(--bg);
+  color: var(--text);
+  padding: 24px clamp(16px, 4vw, 48px) 64px;
+}
+
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+h1, h2, h3, .kicker { font-family: system-ui, -apple-system, sans-serif; font-weight: 800; }
+h1 { margin: 4px 0 0; font-size: clamp(28px, 4vw, 48px); letter-spacing: 0.04em; }
+h2 { font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 0; }
+h3 { margin: 0 0 12px; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.kicker { margin: 0; color: var(--accent); letter-spacing: 0.18em; text-transform: uppercase; font-size: 11px; }
+.lede { max-width: 720px; color: var(--muted); }
+
+.topbar { display: flex; justify-content: space-between; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 24px; }
+.top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.badge {
+  border: 1px solid var(--line); background: #0c1322; padding: 6px 10px;
+  border-radius: 999px; font-size: 12px; color: var(--muted);
+}
+
+.btn {
+  border: 1px solid var(--line); background: var(--panel); color: var(--text);
+  border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 700;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: linear-gradient(90deg, #1d8f74, #3550c7); border-color: transparent; }
+.btn.ghost { background: transparent; }
+.btn.tiny { padding: 6px 10px; font-size: 12px; }
+
+.hidden { display: none !important; }
+
+.admin-panel {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px; margin: 28px 0;
+}
+
+.card {
+  background: rgba(16, 24, 42, 0.88); border: 1px solid var(--line);
+  border-radius: 16px; padding: 16px;
+}
+
+label { display: grid; gap: 6px; margin-bottom: 12px; font-size: 13px; color: var(--muted); }
+input, textarea, select {
+  width: 100%; background: #0b1220; color: var(--text); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px; font: inherit;
+}
+
+.bracket-root { overflow-x: auto; padding-bottom: 12px; }
+.rounds { display: flex; gap: 28px; align-items: stretch; min-height: 240px; }
+.round { min-width: 220px; display: flex; flex-direction: column; justify-content: space-around; gap: 16px; }
+.round h3 { color: var(--muted); }
+
+.match {
+  background: #0c1322; border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+}
+
+.match-team {
+  display: flex; justify-content: space-between; gap: 8px; width: 100%;
+  background: transparent; color: var(--text); border: 0; padding: 10px 12px; text-align: left;
+}
+.match-team + .match-team { border-top: 1px solid var(--line); }
+.match-team.winner { color: var(--win); background: rgba(61, 255, 200, 0.08); font-weight: bold; }
+.match-team.pickable { cursor: pointer; }
+.match-team.pickable:hover { background: rgba(109, 124, 255, 0.16); }
+
+dialog {
+  border: 1px solid var(--line); border-radius: 16px; background: #0d1526; color: var(--text);
+  padding: 20px; width: min(420px, 92vw); margin: auto;
+}
+dialog::backdrop { background: rgba(0,0,0,0.7); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 999;
+  display: flex; align-items: center; justify-content: center;
+}
+/* Garis Konektor Bagan & Input Skor */
+.rounds {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  min-height: 300px;
+}
+
+.round {
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 24px;
+}
+
+.match {
+  position: relative;
+  background: #0c1322;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: visible;
+}
+
+/* Garis Hubung Kanan */
+.round:not(:last-child) .match::after {
+  content: "";
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  width: 20px;
+  height: 2px;
+  background: var(--line);
+}
+
+.match-team {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.match-score-input {
+  width: 40px !important;
+  padding: 2px 4px !important;
+  text-align: center;
+  font-size: 12px;
+  height: 24px;
+  border: 1px solid var(--line);
+  background: #070b14;
+}
