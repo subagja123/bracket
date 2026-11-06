@@ -1,5 +1,4 @@
 (function () {
-  // --- KONFIGURASI FIREBASE ANDA ---
   const firebaseConfig = {
     apiKey: "AIzaSyALNq5dshCwnV0smKZoF4PRMqUjw6zqHTg",
     authDomain: "arena-bracket.firebaseapp.com",
@@ -11,7 +10,6 @@
     measurementId: "G-WE4ZG1P621"
   };
 
-  // Inisialisasi Firebase & Realtime Database
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
   }
@@ -22,21 +20,31 @@
   const ADMIN_USER = "admin";
   const ADMIN_PASS = "admin123";
 
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return structuredClone(defaultState);
-      return Object.assign(structuredClone(defaultState), JSON.parse(raw));
-    } catch (err) {
-      return structuredClone(defaultState);
-    }
-  }
+  const defaultState = {
+    content: {
+      title: "Arena Brackets",
+      subtitle: "Live tournament display",
+      description: "Follow team names, matchups, and scores. Only an admin can change the tournament.",
+    },
+    teams: [],
+    tournament: { mode: "single", groupCount: 4 },
+    bracket: null,
+  };
 
-function saveState() {
-  tournamentRef.set(state.data).catch(function (error) {
-    showToast("Gagal menyimpan ke Firebase: " + error.message, true);
-  });
-}
+  const state = {
+    isAdmin: sessionStorage.getItem(SESSION_KEY) === "1",
+    data: structuredClone(defaultState),
+  };
+
+  const $ = function (id) {
+    return document.getElementById(id);
+  };
+
+  function saveState() {
+    tournamentRef.set(state.data).catch(function (error) {
+      showToast("Gagal menyimpan ke Firebase: " + error.message, true);
+    });
+  }
 
   function escapeHtml(value) {
     return String(value)
@@ -235,11 +243,11 @@ function saveState() {
     });
     return (
       (champ ? '<p class="champion">Champion: ' + escapeHtml(teamName(champ)) + "</p>" : "") +
-      "<h2>Winners bracket</h2><div class=\"rounds\">" +
+      '<h2>Winners bracket</h2><div class="rounds">' +
       wb.join("") +
-      "</div><h2>Losers bracket</h2>" +
+      '</div><h2>Losers bracket</h2>' +
       (lb.length ? '<div class="rounds">' + lb.join("") + "</div>" : '<p class="hint">With two teams, the first loss goes to the Grand Final.</p>') +
-      "<h2>Grand Final</h2><div class=\"rounds\">" +
+      '<h2>Grand Final</h2><div class="rounds">' +
       column("Grand Final", [gf[0]], ["If the winners-bracket champion wins, the tournament ends."]) +
       column("Reset match", [gf[1]], ["Played only if the losers-bracket champion wins the first Grand Final."]) +
       "</div>"
@@ -423,7 +431,6 @@ function saveState() {
     }
   });
 
- // Taruh di paling bawah app.js menggantikan render(); lama
   tournamentRef.on("value", function (snapshot) {
     const val = snapshot.val();
     if (val) {
