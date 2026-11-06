@@ -1,292 +1,441 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+(function () {
+  // --- KONFIGURASI FIREBASE ANDA ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyALNq5dshCwnV0smKZoF4PRMqUjw6zqHTg",
+    authDomain: "arena-bracket.firebaseapp.com",
+    databaseURL: "https://arena-bracket-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "arena-bracket",
+    storageBucket: "arena-bracket.firebasestorage.app",
+    messagingSenderId: "215659276959",
+    appId: "1:215659276959:web:2045b52d31850e0e4950aa",
+    measurementId: "G-WE4ZG1P621"
+  };
 
-// 1. Konfigurasi Database Firebase Realtime
-const firebaseConfig = {
-  databaseURL: "https://arena-bracket-default-rtdb.asia-southeast1.firebasedatabase.app"
-};
+  // Inisialisasi Firebase & Realtime Database
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.database();
+  const tournamentRef = db.ref("tournamentState");
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getDatabase(firebaseApp);
-const stateRef = ref(db, "tournament_state");
+  const SESSION_KEY = "arena-brackets-admin";
+  const ADMIN_USER = "admin";
+  const ADMIN_PASS = "admin123";
 
-const ADMIN_USER = "LPPM";
-const ADMIN_PASS = "2528";
-
-let isAdmin = false;
-let state = {
-  content: {
-    title: "Arena Brackets",
-    subtitle: "Live tournament display",
-    description: "Follow matchups, results, and standings in real time."
-  },
-  teams: [],
-  tournament: { mode: "single", groupCount: 2, generatedAt: null },
-  bracket: null
-};
-
-// ==========================================
-// 2. LOGIKA GENERASI BABAK LENGKAP & ALUR PEMENANG
-// ==========================================
-
-function seedSingleElimination(teams) {
-  const count = teams.length;
-  if (count < 2) return null;
-
-  // Hitung jumlah babak yang dibutuhkan (2^n)
-  let totalRounds = Math.ceil(Math.log2(count));
-  let bracketSize = Math.pow(2, totalRounds);
-  
-  let rounds = [];
-  let currentMatchesCount = bracketSize / 2;
-
-  // Buat Struktur Babak dari Babak 1 sampai Final
-  for (let r = 0; r < totalRounds; r++) {
-    let matches = [];
-    for (let m = 0; m < currentMatchesCount; m++) {
-      matches.push({
-        id: `r${r + 1}_m${m + 1}`,
-        t1: r === 0 ? (teams[m * 2]?.id || null) : null,
-        t2: r === 0 ? (teams[m * 2 + 1]?.id || null) : null,
-        score1: 0,
-        score2: 0,
-        winner: null
-      });
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return structuredClone(defaultState);
+      return Object.assign(structuredClone(defaultState), JSON.parse(raw));
+    } catch (err) {
+      return structuredClone(defaultState);
     }
-    rounds.push({ id: `r${r + 1}`, matches });
-    currentMatchesCount /= 2;
   }
-
-  return { type: "single", rounds };
-}
-
-function updateBracketProgression(bracket) {
-  if (!bracket || !bracket.rounds) return;
-
-  for (let r = 0; r < bracket.rounds.length - 1; r++) {
-    const currentRound = bracket.rounds[r];
-    const nextRound = bracket.rounds[r + 1];
-
-    currentRound.matches.forEach((m, idx) => {
-      if (m.winner) {
-        const nextMatchIdx = Math.floor(idx / 2);
-        const isFirstSlot = idx % 2 === 0;
-
-        if (isFirstSlot) {
-          nextRound.matches[nextMatchIdx].t1 = m.winner;
-        } else {
-          nextRound.matches[nextMatchIdx].t2 = m.winner;
-        }
-      }
-    });
-  }
-}
-
-// ==========================================
-// 3. REALTIME FIREBASE SYNC
-// ==========================================
-onValue(stateRef, (snapshot) => {
-  const data = snapshot.val();
-  if (data) {
-    state = { ...state, ...data };
-  } else {
-    set(stateRef, state);
-  }
-  render();
-});
-
-// ==========================================
-// 4. DOM ELEMENTS & LISTENERS
-// ==========================================
-const formLogin = document.getElementById("form-login");
-const btnLoginModal = document.getElementById("btn-login-modal");
-const btnLogout = document.getElementById("btn-logout");
-const modalLogin = document.getElementById("modal-login");
-const btnCloseModal = document.getElementById("btn-close-modal");
-const adminPanel = document.getElementById("admin-panel");
-
-const contentTitle = document.getElementById("content-title");
-const contentSubtitle = document.getElementById("content-subtitle");
-const contentDescription = document.getElementById("content-description");
-
-const inputTitle = document.getElementById("input-title");
-const inputSubtitle = document.getElementById("input-subtitle");
-const inputDescription = document.getElementById("input-description");
-const btnSaveContent = document.getElementById("btn-save-content");
-
-const inputTeams = document.getElementById("input-teams");
-const btnSaveTeams = document.getElementById("btn-save-teams");
-
-const selectMode = document.getElementById("select-mode");
-const btnGenerateBracket = document.getElementById("btn-generate-bracket");
-const bracketContainer = document.getElementById("bracket-container");
-
-if (btnLoginModal) {
-  btnLoginModal.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (modalLogin) modalLogin.classList.remove("hidden");
-  });
-}
-
-if (btnCloseModal) {
-  btnCloseModal.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (modalLogin) modalLogin.classList.add("hidden");
-  });
-}
-
-if (formLogin) {
-  formLogin.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const user = document.getElementById("login-username").value.trim();
-    const pass = document.getElementById("login-password").value.trim();
-
-    if (user === ADMIN_USER && pass === ADMIN_PASS) {
-      isAdmin = true;
-      if (modalLogin) modalLogin.classList.add("hidden");
-      render();
-    } else {
-      alert("Username atau Password Salah!");
-    }
-  });
-}
-
-if (btnLogout) {
-  btnLogout.addEventListener("click", (e) => {
-    e.preventDefault();
-    isAdmin = false;
-    render();
-  });
-}
 
 function saveState() {
-  set(stateRef, state);
-}
-
-if (btnSaveContent) {
-  btnSaveContent.addEventListener("click", (e) => {
-    e.preventDefault();
-    state.content = {
-      title: inputTitle.value.trim(),
-      subtitle: inputSubtitle.value.trim(),
-      description: inputDescription.value.trim()
-    };
-    saveState();
+  tournamentRef.set(state.data).catch(function (error) {
+    showToast("Gagal menyimpan ke Firebase: " + error.message, true);
   });
 }
 
-if (btnSaveTeams) {
-  btnSaveTeams.addEventListener("click", (e) => {
-    e.preventDefault();
-    const raw = inputTeams.value;
-    const names = raw.split(/\r?\n|,/).map(n => n.trim()).filter(Boolean);
-    const unique = [...new Set(names)];
-    if (unique.length < 2) return alert("Masukkan minimal 2 tim");
-
-    state.teams = unique.map((name, i) => ({ id: `t${i + 1}`, name }));
-    state.bracket = null;
-    saveState();
-  });
-}
-
-if (btnGenerateBracket) {
-  btnGenerateBracket.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (!state.teams || state.teams.length < 2) return alert("Tambahkan minimal 2 tim terlebih dahulu");
-    state.bracket = seedSingleElimination(state.teams);
-    saveState();
-  });
-}
-
-// ==========================================
-// 5. RENDER UI BRACKET BESERTA EDIT SKOR
-// ==========================================
-function render() {
-  if (contentTitle) contentTitle.textContent = state.content.title;
-  if (contentSubtitle) contentSubtitle.textContent = state.content.subtitle;
-  if (contentDescription) contentDescription.textContent = state.content.description;
-
-  if (isAdmin) {
-    if (adminPanel) adminPanel.classList.remove("hidden");
-    if (btnLoginModal) btnLoginModal.classList.add("hidden");
-    if (btnLogout) btnLogout.classList.remove("hidden");
-  } else {
-    if (adminPanel) adminPanel.classList.add("hidden");
-    if (btnLoginModal) btnLoginModal.classList.remove("hidden");
-    if (btnLogout) btnLogout.classList.add("hidden");
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 
-  renderBracket();
-}
-
-function renderBracket() {
-  if (!bracketContainer) return;
-
-  if (!state.bracket || !state.bracket.rounds) {
-    bracketContainer.innerHTML = `<p class="lede">Belum ada bagan turnamen yang dibuat.</p>`;
-    return;
+  function showToast(message, isError) {
+    const el = $("toast");
+    el.textContent = message;
+    el.classList.toggle("error", Boolean(isError));
+    el.classList.remove("hidden");
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(function () {
+      el.classList.add("hidden");
+    }, 3500);
   }
 
-  const teamsById = Object.fromEntries(state.teams.map(t => [t.id, t]));
-  let html = `<div class="bracket-root"><div class="rounds">`;
-
-  state.bracket.rounds.forEach((round, rIndex) => {
-    const isFinal = rIndex === state.bracket.rounds.length - 1;
-    const roundTitle = isFinal ? "Final" : `Babak ${rIndex + 1}`;
-
-    html += `<div class="round"><h3>${roundTitle}</h3>`;
-    round.matches.forEach((m) => {
-      const t1 = teamsById[m.t1] || { name: m.t1 ? m.t1 : "TBD" };
-      const t2 = teamsById[m.t2] || { name: m.t2 ? m.t2 : "TBD" };
-      const isPickable = isAdmin ? 'pickable' : '';
-
-      html += `
-        <div class="match">
-          <div class="match-team ${m.winner === m.t1 ? 'winner' : ''} ${isPickable}" onclick="window.setMatchWinner('${m.id}', '${m.t1}')">
-            <span>${t1.name}</span>
-            ${isAdmin ? `<input type="number" class="match-score-input" value="${m.score1 || 0}" onclick="event.stopPropagation()" onchange="window.updateScore('${m.id}', 1, this.value)">` : `<span>${m.score1 || 0}</span>`}
-          </div>
-          <div class="match-team ${m.winner === m.t2 ? 'winner' : ''} ${isPickable}" onclick="window.setMatchWinner('${m.id}', '${m.t2}')">
-            <span>${t2.name}</span>
-            ${isAdmin ? `<input type="number" class="match-score-input" value="${m.score2 || 0}" onclick="event.stopPropagation()" onchange="window.updateScore('${m.id}', 2, this.value)">` : `<span>${m.score2 || 0}</span>`}
-          </div>
-        </div>
-      `;
+  function teamName(id) {
+    if (!id) return "BYE";
+    const team = state.data.teams.find(function (item) {
+      return item.id === id;
     });
-    html += `</div>`;
-  });
+    return team ? team.name : "TBD";
+  }
 
-  html += `</div></div>`;
-  bracketContainer.innerHTML = html;
-}
+  function modeLabel(mode) {
+    return {
+      single: "Single elimination",
+      double: "Double elimination",
+      groups: "Group stage",
+    }[mode] || "No bracket yet";
+  }
 
-// Global Handlers
-window.setMatchWinner = function(matchId, winnerId) {
-  if (!isAdmin || !winnerId || winnerId === "TBD") return;
-  state.bracket.rounds.forEach(r => {
-    r.matches.forEach(m => {
-      if (m.id === matchId) m.winner = winnerId;
-    });
-  });
-  updateBracketProgression(state.bracket);
-  saveState();
-};
-
-window.updateScore = function(matchId, teamNum, scoreVal) {
-  if (!isAdmin) return;
-  const val = parseInt(scoreVal) || 0;
-  state.bracket.rounds.forEach(r => {
-    r.matches.forEach(m => {
-      if (m.id === matchId) {
-        if (teamNum === 1) m.score1 = val;
-        if (teamNum === 2) m.score2 = val;
-
-        // Otomatis tentukan pemenang dari skor tertinggi
-        if (m.score1 > m.score2 && m.t1) m.winner = m.t1;
-        else if (m.score2 > m.score1 && m.t2) m.winner = m.t2;
+  function parseTeams(text) {
+    const names = text
+      .split(/\r?\n/)
+      .map(function (line) {
+        return line.trim();
+      })
+      .filter(Boolean);
+    const unique = [];
+    names.forEach(function (name) {
+      if (
+        !unique.some(function (item) {
+          return item.toLowerCase() === name.toLowerCase();
+        })
+      ) {
+        unique.push(name);
       }
     });
+    return unique.map(function (name, index) {
+      return { id: "t" + (index + 1), name: name };
+    });
+  }
+
+  function requireAdmin() {
+    if (!state.isAdmin) throw new Error("Admin login is required to make changes.");
+  }
+
+  function render() {
+    const data = state.data;
+    const bracket = data.bracket;
+    $("title").textContent = data.content.title;
+    $("subtitle").textContent = data.content.subtitle;
+    $("description").textContent = data.content.description;
+    document.title = data.content.title;
+    $("modeBadge").textContent = bracket
+      ? modeLabel(bracket.type)
+      : modeLabel(data.tournament.mode) + " (not generated)";
+    $("adminPanel").classList.toggle("hidden", !state.isAdmin);
+    $("loginBtn").classList.toggle("hidden", state.isAdmin);
+    $("logoutBtn").classList.toggle("hidden", !state.isAdmin);
+    $("contentTitle").value = data.content.title;
+    $("contentSubtitle").value = data.content.subtitle;
+    $("contentDescription").value = data.content.description;
+    $("teamNames").value = data.teams
+      .map(function (team) {
+        return team.name;
+      })
+      .join("\n");
+    $("modeSelect").value = data.tournament.mode;
+    $("groupCount").value = String(data.tournament.groupCount || 4);
+    $("groupCountWrap").classList.toggle("hidden", data.tournament.mode !== "groups");
+    $("teamList").innerHTML = data.teams.length
+      ? data.teams
+          .map(function (team) {
+            return '<span class="chip">' + escapeHtml(team.name) + "</span>";
+          })
+          .join("")
+      : '<span class="chip">No teams yet</span>';
+    $("bracketRoot").innerHTML = renderBracket(bracket);
+    bindScoreInputs();
+  }
+
+  function renderBracket(bracket) {
+    if (!bracket) {
+      return '<p class="hint">The admin has not generated a bracket yet.</p>';
+    }
+    if (bracket.type === "groups") return renderGroups(bracket);
+    if (bracket.type === "single") return renderSingle(bracket);
+    return renderDouble(bracket);
+  }
+
+  function teamRow(match, side) {
+    const team = match[side];
+    const id = team && team.teamId;
+    const isWinner = id && match.winnerId === id;
+    const canEdit = state.isAdmin && match.teamA.teamId && match.teamB.teamId && match.status !== "bye";
+    const label = id ? escapeHtml(teamName(id)) : match.status === "bye" ? "BYE" : "TBD";
+    return (
+      '<div class="team-row ' +
+      (isWinner ? "winner " : "") +
+      (id ? "" : "empty") +
+      '"><span>' +
+      label +
+      '</span><input class="score-input" type="number" min="0" step="1" data-match="' +
+      escapeHtml(match.id) +
+      '" data-side="' +
+      side +
+      '" value="' +
+      (team && id ? team.score : "") +
+      '" ' +
+      (canEdit ? "" : "disabled") +
+      "></div>"
+    );
+  }
+
+  function matchCard(match, caption) {
+    return (
+      '<article class="match" data-id="' +
+      escapeHtml(match.id) +
+      '"><div class="match-meta"><span>' +
+      escapeHtml(caption || "") +
+      "</span><span>" +
+      escapeHtml(match.status) +
+      "</span></div>" +
+      teamRow(match, "teamA") +
+      teamRow(match, "teamB") +
+      "</article>"
+    );
+  }
+
+  function column(title, matches, captions) {
+    return (
+      '<div class="round"><h3>' +
+      escapeHtml(title) +
+      "</h3>" +
+      matches
+        .map(function (match, index) {
+          return matchCard(match, captions && captions[index]);
+        })
+        .join("") +
+      "</div>"
+    );
+  }
+
+  function renderSingle(bracket) {
+    const champ = BracketEngine.champion(bracket);
+    const rounds = [];
+    for (let r = 1; r <= bracket.rounds; r += 1) {
+      const matches = bracket.matches.filter(function (m) {
+        return m.round === r;
+      });
+      rounds.push(column(BracketEngine.roundLabel(r, bracket.rounds), matches));
+    }
+    return (
+      (champ ? '<p class="champion">Champion: ' + escapeHtml(teamName(champ)) + "</p>" : "") +
+      '<div class="rounds">' +
+      rounds.join("") +
+      "</div>"
+    );
+  }
+
+  function renderDouble(bracket) {
+    const champ = BracketEngine.champion(bracket);
+    const wb = [];
+    for (let r = 1; r <= bracket.wbRounds; r += 1) {
+      const matches = bracket.matches.filter(function (m) {
+        return m.bracket === "winners" && m.round === r;
+      });
+      const title = r === bracket.wbRounds ? "Winners Final" : "Winners " + BracketEngine.roundLabel(r, bracket.wbRounds);
+      wb.push(column(title, matches));
+    }
+    const lb = [];
+    for (let r = 1; r <= bracket.lbRounds; r += 1) {
+      const matches = bracket.matches.filter(function (m) {
+        return m.bracket === "losers" && m.round === r;
+      });
+      lb.push(column("Losers Round " + r, matches));
+    }
+    const gf = bracket.matches.filter(function (m) {
+      return m.bracket === "grand";
+    });
+    return (
+      (champ ? '<p class="champion">Champion: ' + escapeHtml(teamName(champ)) + "</p>" : "") +
+      "<h2>Winners bracket</h2><div class=\"rounds\">" +
+      wb.join("") +
+      "</div><h2>Losers bracket</h2>" +
+      (lb.length ? '<div class="rounds">' + lb.join("") + "</div>" : '<p class="hint">With two teams, the first loss goes to the Grand Final.</p>') +
+      "<h2>Grand Final</h2><div class=\"rounds\">" +
+      column("Grand Final", [gf[0]], ["If the winners-bracket champion wins, the tournament ends."]) +
+      column("Reset match", [gf[1]], ["Played only if the losers-bracket champion wins the first Grand Final."]) +
+      "</div>"
+    );
+  }
+
+  function renderGroups(bracket) {
+    const teamsById = {};
+    state.data.teams.forEach(function (team) {
+      teamsById[team.id] = team;
+    });
+    return (
+      '<div class="groups">' +
+      bracket.groups
+        .map(function (group) {
+          const table = BracketEngine.groupStandings(group, teamsById);
+          return (
+            '<section class="group-card"><h3>' +
+            escapeHtml(group.name) +
+            "</h3><table><thead><tr><th>Pos</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead><tbody>" +
+            table
+              .map(function (row, index) {
+                return (
+                  "<tr><td>" +
+                  (index + 1) +
+                  "</td><td>" +
+                  escapeHtml(row.name) +
+                  "</td><td>" +
+                  row.played +
+                  "</td><td>" +
+                  row.wins +
+                  "</td><td>" +
+                  row.draws +
+                  "</td><td>" +
+                  row.losses +
+                  "</td><td>" +
+                  row.gd +
+                  "</td><td>" +
+                  row.points +
+                  "</td></tr>"
+                );
+              })
+              .join("") +
+            "</tbody></table>" +
+            group.matches
+              .map(function (match) {
+                return matchCard(match, "Round robin");
+              })
+              .join("") +
+            "</section>"
+          );
+        })
+        .join("") +
+      "</div>"
+    );
+  }
+
+  function bindScoreInputs() {
+    document.querySelectorAll(".score-input").forEach(function (input) {
+      function onScore() {
+        if (!state.isAdmin) return;
+        const matchId = input.getAttribute("data-match");
+        const card = document.querySelector('.match[data-id="' + matchId + '"]');
+        const a = card.querySelector('[data-side="teamA"]');
+        const b = card.querySelector('[data-side="teamB"]');
+        try {
+          requireAdmin();
+          BracketEngine.applyMatchScores(state.data.bracket, matchId, a.value, b.value);
+          saveState();
+          render();
+        } catch (err) {
+          showToast(err.message, true);
+          render();
+        }
+      }
+      input.addEventListener("change", onScore);
+    });
+  }
+
+  $("loginBtn").addEventListener("click", function () {
+    $("loginDialog").showModal();
+    $("username").focus();
   });
-  updateBracketProgression(state.bracket);
-  saveState();
-};
+
+  $("loginForm").addEventListener("submit", function (event) {
+    event.preventDefault();
+    if (event.submitter && event.submitter.value === "cancel") {
+      $("loginDialog").close();
+    }
+  });
+
+  $("loginSubmit").addEventListener("click", function () {
+    const user = $("username").value.trim();
+    const pass = $("password").value;
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
+      state.isAdmin = true;
+      sessionStorage.setItem(SESSION_KEY, "1");
+      $("loginDialog").close();
+      $("password").value = "";
+      render();
+      showToast("Admin signed in.");
+    } else {
+      showToast("Invalid admin credentials.", true);
+    }
+  });
+
+  $("logoutBtn").addEventListener("click", function () {
+    state.isAdmin = false;
+    sessionStorage.removeItem(SESSION_KEY);
+    render();
+    showToast("Logged out. The bracket is now view-only.");
+  });
+
+  $("contentForm").addEventListener("submit", function (event) {
+    event.preventDefault();
+    try {
+      requireAdmin();
+      state.data.content = {
+        title: $("contentTitle").value.trim() || "Arena Brackets",
+        subtitle: $("contentSubtitle").value.trim(),
+        description: $("contentDescription").value.trim(),
+      };
+      saveState();
+      render();
+      showToast("Website content saved.");
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  });
+
+  $("teamsForm").addEventListener("submit", function (event) {
+    event.preventDefault();
+    try {
+      requireAdmin();
+      const teams = parseTeams($("teamNames").value);
+      if (teams.length < 2) throw new Error("Enter at least two team names.");
+      state.data.teams = teams;
+      state.data.bracket = null;
+      saveState();
+      render();
+      showToast("Teams saved. Generate the bracket to randomize matchups.");
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  });
+
+  $("modeSelect").addEventListener("change", function () {
+    $("groupCountWrap").classList.toggle("hidden", $("modeSelect").value !== "groups");
+  });
+
+  $("generateForm").addEventListener("submit", function (event) {
+    event.preventDefault();
+    try {
+      requireAdmin();
+      const teams = state.data.teams;
+      if (teams.length < 2) throw new Error("Save at least two teams first.");
+      const mode = $("modeSelect").value;
+      const groupCount = Number($("groupCount").value) || 4;
+      state.data.tournament = { mode: mode, groupCount: groupCount };
+      if (mode === "single") state.data.bracket = BracketEngine.seedSingleElimination(teams);
+      else if (mode === "double") state.data.bracket = BracketEngine.seedDoubleElimination(teams);
+      else state.data.bracket = BracketEngine.seedGroups(teams, groupCount);
+      saveState();
+      render();
+      showToast("Matchups randomized.");
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  });
+
+  $("resetBracket").addEventListener("click", function () {
+    try {
+      requireAdmin();
+      if (!confirm("Clear the current bracket? Teams and website text will stay.")) return;
+      state.data.bracket = null;
+      saveState();
+      render();
+      showToast("Bracket cleared.");
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  });
+
+ // Taruh di paling bawah app.js menggantikan render(); lama
+  tournamentRef.on("value", function (snapshot) {
+    const val = snapshot.val();
+    if (val) {
+      state.data = Object.assign(structuredClone(defaultState), val);
+    } else {
+      state.data = structuredClone(defaultState);
+    }
+
+    if (state.data.bracket) {
+      BracketEngine.recompute(state.data.bracket);
+    }
+
+    render();
+  });
+})();

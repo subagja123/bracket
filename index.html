@@ -1,111 +1,102 @@
 <!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arena Brackets</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="bg-grid"></div>
-
-  <div id="app">
-    <!-- Header Utama -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arena Brackets</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Manrope:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="bg-grid"></div>
     <header class="topbar">
       <div>
-        <p class="kicker">Live Tournament Display</p>
-        <h1 id="content-title">Arena Brackets</h1>
-        <p id="content-subtitle" class="lede">Sistem Pertandingan Realtime</p>
+        <p class="kicker" id="subtitle">Live tournament display</p>
+        <h1 id="title">Arena Brackets</h1>
       </div>
       <div class="top-actions">
-        <span class="badge">Firebase Sync: Active</span>
-        <button id="btn-login-modal" class="btn primary">Admin Login</button>
-        <button id="btn-logout" class="btn ghost hidden">Logout</button>
+        <span id="modeBadge" class="badge">No bracket yet</span>
+        <button id="loginBtn" class="btn ghost" type="button">Admin login</button>
+        <button id="logoutBtn" class="btn ghost hidden" type="button">Log out</button>
       </div>
     </header>
 
-    <main>
-      <!-- Panel Admin (Muncul Hanya Jika Admin Login) -->
-      <section id="admin-panel" class="admin-panel hidden">
-        <div class="card">
-          <h2>Informasi Turnamen</h2>
-          <label>
-            Judul Turnamen
-            <input type="text" id="input-title" placeholder="Nama Turnamen">
-          </label>
-          <label>
-            Subjudul / Kategori
-            <input type="text" id="input-subtitle" placeholder="Subjudul Turnamen">
-          </label>
-          <label>
-            Deskripsi Singkat
-            <textarea id="input-description" rows="2" placeholder="Deskripsi..."></textarea>
-          </label>
-          <button id="btn-save-content" class="btn primary tiny">Simpan Info</button>
-        </div>
+    <p id="description" class="lede">
+      Follow team names, matchups, and scores. Only an admin can change the tournament.
+    </p>
+    <p id="toast" class="toast hidden" role="status"></p>
 
-        <div class="card">
-          <h2>Daftar Tim</h2>
+    <section id="adminPanel" class="admin-panel hidden">
+      <h2>Admin controls</h2>
+      <div class="admin-grid">
+        <form id="contentForm" class="card">
+          <h3>Website content</h3>
+          <label>Title<input id="contentTitle" required /></label>
+          <label>Subtitle<input id="contentSubtitle" /></label>
+          <label>Description<textarea id="contentDescription" rows="3"></textarea></label>
+          <button class="btn" type="submit">Save content</button>
+        </form>
+        <form id="teamsForm" class="card">
+          <h3>Participating teams</h3>
+          <label>One team per line<textarea id="teamNames" rows="8" placeholder="Phoenix&#10;Viper&#10;Titan&#10;Nova"></textarea></label>
+          <button class="btn" type="submit">Save teams</button>
+        </form>
+        <form id="generateForm" class="card">
+          <h3>Format and randomizer</h3>
           <label>
-            Nama Tim (Pisahkan dengan baris baru / koma)
-            <textarea id="input-teams" rows="5" placeholder="Tim A&#10;Tim B&#10;Tim C&#10;Tim D"></textarea>
-          </label>
-          <button id="btn-save-teams" class="btn primary tiny">Simpan Tim</button>
-        </div>
-
-        <div class="card">
-          <h2>Generasi Bracket</h2>
-          <label>
-            Format Pertandingan
-            <select id="select-mode">
-              <option value="single">Single Elimination</option>
-              <option value="double">Double Elimination</option>
+            Tournament format
+            <select id="modeSelect">
+              <option value="single">Single elimination</option>
+              <option value="double">Double elimination</option>
+              <option value="groups">Group stage</option>
             </select>
           </label>
-          <button id="btn-generate-bracket" class="btn primary">Acak & Buat Bracket</button>
-        </div>
-      </section>
-
-      <!-- Deskripsi Turnamen -->
-      <section class="card section-block" style="margin-top: 24px;">
-        <p id="content-description" class="lede" style="margin: 0;">Follow matchups, results, and standings in real time.</p>
-      </section>
-
-      <!-- Display Bagan Bracket Turnamen -->
-      <section class="card section-block">
-        <h2>Bagan Turnamen</h2>
-        <div id="bracket-container">
-          <p class="lede">Belum ada bagan turnamen yang dibuat.</p>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- Modal Dialog Login Admin -->
-  <!-- Modal Login Admin standar -->
-<!-- Modal Login Admin dengan Tag Form -->
-<div id="modal-login" class="modal-backdrop hidden">
-  <div class="card" style="width: min(400px, 90vw); margin: 100px auto;">
-    <h2>Admin Login</h2>
-    
-    <form id="form-login">
-      <label>
-        Username
-        <input type="text" id="login-username" autocomplete="username" placeholder="Masukkan username" required>
-      </label>
-      <label>
-        Password
-        <input type="password" id="login-password" autocomplete="current-password" placeholder="Masukkan password" required>
-      </label>
-      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-        <button type="button" id="btn-close-modal" class="btn ghost tiny">Batal</button>
-        <button type="submit" id="btn-do-login" class="btn primary tiny">Masuk</button>
+          <label id="groupCountWrap" class="hidden">
+            Number of groups
+            <select id="groupCount">
+              <option value="2">2</option>
+              <option selected value="4">4</option>
+              <option value="8">8</option>
+            </select>
+          </label>
+          <button class="btn primary" type="submit">Shuffle and generate bracket</button>
+          <button id="resetBracket" class="btn danger" type="button">Clear bracket</button>
+          <p class="hint">Change match scores in the bracket to decide winners and advance teams.</p>
+        </form>
       </div>
-    </form>
-  </div>
-</div>
+    </section>
 
-  <!-- Pemanggilan Script Utama -->
-  <script type="module" src="app.js"></script>
-</body>
+    <section class="teams-card">
+      <h2>Teams</h2>
+      <div id="teamList" class="chips"></div>
+    </section>
+
+    <section class="bracket-wrap">
+      <h2>Bracket</h2>
+      <div id="bracketRoot" class="bracket-root"></div>
+    </section>
+
+    <dialog id="loginDialog">
+      <form id="loginForm" class="login-form">
+        <h2>Admin login</h2>
+        <label>Username<input id="username" autocomplete="username" required /></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" required /></label>
+        <p class="hint">Default: username <strong>admin</strong>, password <strong>admin123</strong></p>
+        <div class="dialog-actions">
+          <button class="btn ghost" value="cancel" type="submit">Cancel</button>
+          <button class="btn primary" id="loginSubmit" type="button">Sign in</button>
+        </div>
+      </form>
+    </dialog>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script src="bracket.js"></script>
+<script src="app.js"></script>
+  </body>
 </html>

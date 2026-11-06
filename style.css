@@ -1,160 +1,353 @@
 :root {
   --bg: #070b14;
-  --panel: #10182a;
-  --line: #2a3a5c;
-  --text: #e8eefc;
-  --muted: #93a0bf;
-  --accent: #3dffc8;
-  --accent-2: #6d7cff;
+  --bg-2: #10182a;
+  --card: rgba(16, 24, 42, 0.88);
+  --line: rgba(140, 170, 255, 0.18);
+  --text: #eef3ff;
+  --muted: #9aa8c7;
+  --accent: #6ea8ff;
+  --accent-2: #49e0c0;
   --danger: #ff6b8a;
-  --win: #3dffc8;
+  --win: #49e0c0;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  --radius: 18px;
 }
 
-* { box-sizing: border-box; }
-html, body { margin: 0; min-height: 100%; }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: radial-gradient(circle at top right, #173056, var(--bg) 42%);
+  color: var(--text);
+  font-family: Manrope, "Segoe UI", sans-serif;
+}
 
 body {
-  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
-  background: radial-gradient(1200px 600px at 10% -10%, #1a2450 0%, transparent 50%),
-              radial-gradient(900px 500px at 110% 10%, #123d36 0%, transparent 45%),
-              var(--bg);
-  color: var(--text);
-  padding: 24px clamp(16px, 4vw, 48px) 64px;
+  padding: 28px;
 }
 
 .bg-grid {
-  position: fixed; inset: 0; pointer-events: none;
-  background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(110, 168, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(110, 168, 255, 0.06) 1px, transparent 1px);
   background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 90%);
 }
 
-h1, h2, h3, .kicker { font-family: system-ui, -apple-system, sans-serif; font-weight: 800; }
-h1 { margin: 4px 0 0; font-size: clamp(28px, 4vw, 48px); letter-spacing: 0.04em; }
-h2 { font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 0; }
-h3 { margin: 0 0 12px; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
-.kicker { margin: 0; color: var(--accent); letter-spacing: 0.18em; text-transform: uppercase; font-size: 11px; }
-.lede { max-width: 720px; color: var(--muted); }
+.topbar,
+.admin-grid,
+.teams-card,
+.bracket-wrap,
+.login-form {
+  position: relative;
+}
 
-.topbar { display: flex; justify-content: space-between; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 24px; }
-.top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+h1,
+h2,
+h3 {
+  font-family: Orbitron, Manrope, sans-serif;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+h1 {
+  font-size: clamp(1.6rem, 3vw, 2.5rem);
+}
+
+h2 {
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+}
+
+.kicker,
+.lede,
+.hint {
+  color: var(--muted);
+}
+
+.lede {
+  max-width: 760px;
+  margin: 0 0 22px;
+}
+
+.top-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
 
 .badge {
-  border: 1px solid var(--line); background: #0c1322; padding: 6px 10px;
-  border-radius: 999px; font-size: 12px; color: var(--muted);
+  border: 1px solid var(--line);
+  background: rgba(110, 168, 255, 0.12);
+  color: #d6e6ff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
 }
 
 .btn {
-  border: 1px solid var(--line); background: var(--panel); color: var(--text);
-  border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 700;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #243354;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
 }
-.btn:hover { border-color: var(--accent); }
-.btn.primary { background: linear-gradient(90deg, #1d8f74, #3550c7); border-color: transparent; }
-.btn.ghost { background: transparent; }
-.btn.tiny { padding: 6px 10px; font-size: 12px; }
 
-.hidden { display: none !important; }
+.btn:hover {
+  filter: brightness(1.08);
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent), #7b6cff);
+}
+
+.btn.ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.btn.danger {
+  background: #4a2230;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.toast {
+  position: sticky;
+  top: 12px;
+  z-index: 5;
+  width: fit-content;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #163528;
+  color: #d8ffe9;
+}
+
+.toast.error {
+  background: #4a2230;
+  color: #ffd5de;
+}
+
+.card,
+.admin-panel .card,
+.teams-card,
+.bracket-wrap,
+.match,
+.group-card,
+dialog {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
 
 .admin-panel {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px; margin: 28px 0;
+  margin-bottom: 22px;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
 }
 
 .card {
-  background: rgba(16, 24, 42, 0.88); border: 1px solid var(--line);
-  border-radius: 16px; padding: 16px;
+  padding: 16px;
 }
 
-label { display: grid; gap: 6px; margin-bottom: 12px; font-size: 13px; color: var(--muted); }
-input, textarea, select {
-  width: 100%; background: #0b1220; color: var(--text); border: 1px solid var(--line);
-  border-radius: 10px; padding: 10px; font: inherit;
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0;
+  color: var(--muted);
+  font-size: 0.92rem;
 }
 
-.bracket-root { overflow-x: auto; padding-bottom: 12px; }
-.rounds { display: flex; gap: 28px; align-items: stretch; min-height: 240px; }
-.round { min-width: 220px; display: flex; flex-direction: column; justify-content: space-around; gap: 16px; }
-.round h3 { color: var(--muted); }
-
-.match {
-  background: #0c1322; border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+input,
+textarea,
+select {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #0c1324;
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
 }
 
-.match-team {
-  display: flex; justify-content: space-between; gap: 8px; width: 100%;
-  background: transparent; color: var(--text); border: 0; padding: 10px 12px; text-align: left;
+.teams-card {
+  padding: 16px;
+  margin-bottom: 18px;
 }
-.match-team + .match-team { border-top: 1px solid var(--line); }
-.match-team.winner { color: var(--win); background: rgba(61, 255, 200, 0.08); font-weight: bold; }
-.match-team.pickable { cursor: pointer; }
-.match-team.pickable:hover { background: rgba(109, 124, 255, 0.16); }
 
-dialog {
-  border: 1px solid var(--line); border-radius: 16px; background: #0d1526; color: var(--text);
-  padding: 20px; width: min(420px, 92vw); margin: auto;
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
-dialog::backdrop { background: rgba(0,0,0,0.7); }
-.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
-.modal-backdrop {
-  position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  z-index: 999;
-  display: flex; align-items: center; justify-content: center;
+
+.chip {
+  border: 1px solid var(--line);
+  background: #121b30;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 0.92rem;
 }
-/* Garis Konektor Bagan & Input Skor */
+
+.bracket-wrap {
+  padding: 16px;
+  overflow: auto;
+}
+
+.bracket-root {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
 .rounds {
   display: flex;
-  gap: 40px;
-  align-items: center;
-  min-height: 300px;
+  gap: 28px;
+  align-items: stretch;
+  min-width: max-content;
 }
 
 .round {
-  min-width: 200px;
+  min-width: 230px;
   display: flex;
   flex-direction: column;
+  gap: 12px;
   justify-content: space-around;
-  gap: 24px;
+}
+
+.round h3 {
+  font-size: 0.78rem;
+  color: var(--accent-2);
 }
 
 .match {
-  position: relative;
-  background: #0c1322;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  overflow: visible;
+  padding: 10px;
+  min-height: 92px;
 }
 
-/* Garis Hubung Kanan */
-.round:not(:last-child) .match::after {
-  content: "";
-  position: absolute;
-  right: -20px;
-  top: 50%;
-  width: 20px;
-  height: 2px;
-  background: var(--line);
-}
-
-.match-team {
+.match-meta {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  background: transparent;
-  color: var(--text);
-  border: 0;
-  padding: 8px 12px;
-  text-align: left;
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin-bottom: 8px;
 }
 
-.match-score-input {
-  width: 40px !important;
-  padding: 2px 4px !important;
+.team-row {
+  display: grid;
+  grid-template-columns: 1fr 58px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: #0c1324;
+  margin-bottom: 6px;
+}
+
+.team-row.winner {
+  outline: 1px solid var(--win);
+  background: rgba(73, 224, 192, 0.1);
+}
+
+.team-row.empty {
+  color: var(--muted);
+}
+
+.score-input {
+  width: 58px;
   text-align: center;
-  font-size: 12px;
-  height: 24px;
-  border: 1px solid var(--line);
-  background: #070b14;
+  padding: 6px;
+}
+
+.score-input:disabled {
+  opacity: 0.55;
+}
+
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.group-card {
+  padding: 14px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.champion {
+  margin-top: 8px;
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
+dialog {
+  border: 0;
+  padding: 20px;
+  color: var(--text);
+}
+
+dialog::backdrop {
+  background: rgba(4, 8, 16, 0.72);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hint {
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 720px) {
+  body {
+    padding: 16px;
+  }
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
